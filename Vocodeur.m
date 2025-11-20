@@ -15,9 +15,9 @@ clear; close all; clc;
 
 %% Récupération d'un signal audio
 %--------------------------------
-[filename, pathname] = uigetfile('*.wav', 'Choisissez un fichier audio');
+[filename, pathname] = uigetfile('*.wav', 'Choose an audio file');
 if isequal(filename,0)
-    error('Aucun fichier audio sélectionné.');
+    error('No audio file selected.');
 end
 
 file = fullfile(pathname, filename);
@@ -31,40 +31,44 @@ f = (0:N-1)*Fs/N; f = f - Fs/2;
 
 figure(1)
 subplot(3,1,1), plot(t,y)
-title('Signal original')
-xlabel('Temps (s)')
+title('Original signal')
+xlabel('Time (s)')
 subplot(3,1,2), plot(f, abs(fftshift(fft(y))))
-title('Spectre du signal original')
-xlabel('Fréquence (Hz)')
-myspectrogram(y,128,120,128,Fs)
-title('Spectrogramme du signal original')
+title('Spectrum of the original signal')
+xlabel('Frequency (Hz)')
+
+% se não tiver myspectrogram.m, use spectrogram
+spectrogram(y,128,120,128,Fs,'yaxis')
+title('Spectrogram of the original signal')
 
 disp('------------------------------------');
-disp('SON ORIGINAL');
+disp('ORIGINAL SOUND');
 soundsc(y,Fs);
 
-%% MENU PRINCIPAL
+%% MAIN MENU
 %--------------------------------
 continuer = true;
-3
 
 while continuer
     disp(' ');
     disp('====================================');
-    disp('            MENU VOCODEUR           ');
+    disp('              VOCODER MENU          ');
     disp('====================================');
-    disp('1) Modifier la vitesse (tempo) sans modifier le pitch');
-    disp('2) Modifier le pitch sans modifier la vitesse');
-    disp('3) Robotiser la voix');
-    disp('4) Quitter');
-    choix = input('Votre choix : ');
+    disp('1) Change speed (tempo) without changing pitch');
+    disp('2) Change pitch without changing speed');
+    disp('3) Robotize the voice');
+    disp('4) Harmonic Duo/Trio');
+    disp('5) Whisper / Ghost Voice');
+    disp('6) Telephone / Radio Effect');
+    disp('7) Exit');
+    choix = input('Your choice: ');
     
     switch choix
         
         %% 1- MODIFICATION DE LA VITESSE (TEMPO)
         case 1
             disp('------------------------------------');
-            disp('1- MODIFICATION DE LA VITESSE SANS MODIFIER LE PITCH');
+            disp('1- CHANGE SPEED (TEMPO) WITHOUT CHANGING PITCH');
             
             Nfft  = 1024;
             Nwind = Nfft;
@@ -77,20 +81,20 @@ while continuer
             rapp_lent = 3/2;
             ylent = PVoc(y, rapp_lent, Nfft, Nwind);
             pause;
-            disp('Son plus lent (pitch conservé)');
+            disp('Slower sound (pitch preserved)');
             soundsc(ylent, Fs);
             
             % Plus rapide
             rapp_rapide = 2/3;
             yrapide = PVoc(y, rapp_rapide, Nfft, Nwind);
             pause;
-            disp('Son plus rapide (pitch conservé)');
+            disp('Faster sound (pitch preserved)');
             soundsc(yrapide, Fs);
         
         %% 2- MODIFICATION DU PITCH SANS CHANGER LA VITESSE
         case 2
             disp('------------------------------------');
-            disp('2- MODIFICATION DU PITCH SANS MODIFIER LA VITESSE');
+            disp('2- CHANGE PITCH WITHOUT CHANGING SPEED');
             
             Nfft  = 256;
             Nwind = Nfft;
@@ -98,11 +102,10 @@ while continuer
             % 2.1 - Pitch plus aigu
             a = 2; 
             b = 3;
-            % Même schéma que dans le Vocodeur.txt original
             yvoc    = PVoc(y, a/b, Nfft, Nwind);
-            ypitch1 = resample(yvoc, a, b);  % garde la même vitesse
+            ypitch1 = resample(yvoc, a, b);  % precisa da Signal Processing Toolbox
             pause;
-            disp('Pitch augmenté (vitesse conservée)');
+            disp('Increased pitch (speed preserved)');
             soundsc(ypitch1, Fs);
             
             % 2.2 - Pitch plus grave
@@ -111,7 +114,7 @@ while continuer
             yvoc    = PVoc(y, a/b, Nfft, Nwind);
             ypitch2 = resample(yvoc, a, b);
             pause;
-            disp('Pitch diminué (vitesse conservée)');
+            disp('Decreased pitch (speed preserved)');
             soundsc(ypitch2, Fs);
         
         %% 3- VOIX ROBOTISÉE (MENU COM AS FREQUÊNCIAS 1 A 1)
@@ -120,16 +123,16 @@ while continuer
             while continuerRob
                 clc;
                 disp('------------------------------------');
-                disp('      ROBOTISATION DE LA VOIX       ');
+                disp('         VOICE ROBOTIZATION         ');
                 disp('------------------------------------');
-                disp('Choisissez la fréquence de la porteuse fc (Hz) :');
+                disp('Choose the carrier frequency fc (Hz):');
                 disp(' 1) 200 Hz');
                 disp(' 2) 500 Hz');
                 disp(' 3) 1000 Hz');
                 disp(' 4) 2000 Hz');
-                disp(' 5) Autre fréquence...');
-                disp(' 6) Retour au menu principal');
-                op = input('Option : ');
+                disp(' 5) Other frequency...');
+                disp(' 6) Back to main menu');
+                op = input('Option: ');
                 
                 switch op
                     case 1
@@ -141,11 +144,11 @@ while continuer
                     case 4
                         Fc = 2000;
                     case 5
-                        Fc = input('Entrez la fréquence désirée (Hz) : ');
+                        Fc = input('Enter desired frequency (Hz): ');
                     case 6
                         break;
                     otherwise
-                        disp('Option invalide, essayez encore.');
+                        disp('Invalid option, please try again.');
                         pause(1);
                         continue;
                 end
@@ -157,36 +160,62 @@ while continuer
                 % Chamada da função de voz robotizada
                 yrob = Rob(y, Fc, Fs);
                 disp('------------------------------------');
-                fprintf('3- SON "ROBOTISÉ" (fc = %.1f Hz)\n', Fc);
+                fprintf('3- ROBOT VOICE (fc = %.1f Hz)\n', Fc);
                 soundsc(yrob, Fs);
                 
-                % Observação (opcional, igual ao esqueleto original)
+                % Observação (opcional)
                 Nrob = length(yrob);
                 trob = (0:Nrob-1)/Fs;
                 frob = (0:Nrob-1)*Fs/Nrob; frob = frob - Fs/2;
                 
                 figure(6)
                 subplot(3,1,1), plot(trob,yrob)
-                title(sprintf('Signal "robotisé" (fc = %.1f Hz)', Fc))
-                xlabel('Temps (s)')
+                title(sprintf('Robot signal (fc = %.1f Hz)', Fc))
+                xlabel('Time (s)')
                 subplot(3,1,2), plot(frob, abs(fftshift(fft(yrob))))
-                title('Spectre du signal "robotisé"')
-                xlabel('Fréquence (Hz)')
+                title('Spectrum of the robot signal')
+                xlabel('Frequency (Hz)')
                 subplot(3,1,3), spectrogram(yrob,128,120,128,Fs,'yaxis')
-                title('Spectrogramme du signal "robotisé"')
+                title('Spectrogram of the robot signal')
                 
-                resp = input('Tester une autre fréquence ? (o/n) : ', 's');
-                if lower(resp) ~= 'o' && lower(resp) ~= 's'
+                resp = input('Test another frequency? (y/n): ', 's');
+                if lower(resp) ~= 'y'
                     continuerRob = false;
                 end
             end
         
-        %% 4- QUITTER
+        %% 4- HARMONIC DUO / TRIO
         case 4
+            disp('------------------------------------');
+            disp('4- HARMONIC DUO / TRIO (PITCH SHIFTING)');
+            
+            y_trio = HarmonicDuoTrio(y, Fs);
+            soundsc(y_trio, Fs);
+
+        
+        %% 5- WHISPER / GHOST VOICE
+        case 5
+            disp('------------------------------------');
+            disp('5- WHISPER / GHOST VOICE (WHISPERIZATION)');
+            
+            y_whisper = WhisperGhostVoice(y, Fs);
+            soundsc(y_whisper, Fs);
+
+        
+        %% 6- TELEPHONE / RADIO EFFECT
+        case 6
+            disp('------------------------------------');
+            disp('6- TELEPHONE / RADIO EFFECT');
+
+            y_radio = TelephoneRadioEffect(y, Fs);
+            soundsc(y_radio, Fs);
+        
+        %% 7- EXIT
+        case 7
             continuer = false;
-            disp('Fin du programme VOCODEUR.');
+            disp('Exiting VOCODER program.');
         
         otherwise
-            disp('Choix invalide. Veuillez recommencer.');
+            disp('Invalid choice. Please try again.');
     end
 end
